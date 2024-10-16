@@ -24,6 +24,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // 更新右键菜单
 function updateContextMenu(info) {
+  console.log("更新右键菜单", info);
   const selectedText = info.selectionText;
   let encodedText, decodedText;
 
@@ -46,17 +47,32 @@ function updateContextMenu(info) {
   // 更新菜单项
   chrome.contextMenus.update("base64Encode", {
     title: `编码: ${encodedText}`
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("更新编码菜单项错误:", chrome.runtime.lastError);
+    }
   });
   chrome.contextMenus.update("base64Decode", {
     title: `解码: ${decodedText}`
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("更新解码菜单项错误:", chrome.runtime.lastError);
+    }
   });
 
-  // 将结果发送到 popup
-  chrome.runtime.sendMessage({
-    action: "updatePopup",
-    selectedText: selectedText,
-    encodedText: encodedText,
-    decodedText: decodedText
+  // 保存结果到本地存储
+  chrome.storage.local.set({
+    lastResult: {
+      selectedText: selectedText,
+      encodedText: encodedText,
+      decodedText: decodedText
+    }
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("保存到本地存储错误:", chrome.runtime.lastError);
+    } else {
+      console.log("结果已保存到本地存储");
+    }
   });
 }
 
@@ -66,6 +82,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "textSelected") {
     updateContextMenu({ selectionText: request.text });
   }
+  // 确保返回 true 以保持消息通道开放
+  return true;
 });
 
 // 处理右键菜单点击事件

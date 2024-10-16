@@ -1,3 +1,20 @@
+console.log("弹出脚本已加载");
+
+// 初始化时获取最新结果
+function loadLatestResult() {
+  chrome.storage.local.get(["lastResult"], (result) => {
+    console.log("从本地存储获取结果:", result);
+    if (result.lastResult) {
+      document.getElementById("selectedText").value = result.lastResult.selectedText || "";
+      document.getElementById("encodedText").value = result.lastResult.encodedText || "";
+      document.getElementById("decodedText").value = result.lastResult.decodedText || "";
+    }
+  });
+}
+
+// 在 DOMContentLoaded 事件中调用 loadLatestResult
+document.addEventListener('DOMContentLoaded', loadLatestResult);
+
 // 获取当前活动标签页
 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   // 向content script发送消息,请求获取选中的文本
@@ -33,17 +50,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     document.getElementById("decodedText").value = request.decodedText;
     
     // 保存最新结果到本地存储
-    chrome.storage.local.set({lastResult: request});
+    chrome.storage.local.set({lastResult: request}, () => {
+      if (chrome.runtime.lastError) {
+        console.error("保存到本地存储错误:", chrome.runtime.lastError);
+      } else {
+        console.log("结果已保存到本地存储");
+      }
+    });
   }
-});
-
-// 初始化时尝试获取上次的结果
-chrome.storage.local.get(["lastResult"], (result) => {
-  if (result.lastResult) {
-    document.getElementById("selectedText").value = result.lastResult.selectedText;
-    document.getElementById("encodedText").value = result.lastResult.encodedText;
-    document.getElementById("decodedText").value = result.lastResult.decodedText;
-  }
+  // 发送响应
+  sendResponse({received: true});
+  // 返回 true 以保持消息通道开放
+  return true;
 });
 
 // 复制功能
