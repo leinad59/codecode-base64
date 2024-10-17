@@ -29,16 +29,16 @@ function loadLatestResult() {
   chrome.storage.local.get(["lastResult"], (result) => {
     console.log("从本地存储获取结果:", result);
     if (result.lastResult) {
-      document.getElementById("selectedText").value = result.lastResult.selectedText || "";
-      document.getElementById("encodedText").value = result.lastResult.encodedText || "";
-      document.getElementById("decodedText").value = result.lastResult.decodedText || "";
+      document.getElementById("selectedText").textContent = result.lastResult.selectedText || "";
+      document.getElementById("encodedText").textContent = result.lastResult.encodedText || "";
+      document.getElementById("decodedText").textContent = result.lastResult.decodedText || "";
     }
   });
 }
 
 // 复制功能
 function copyText(elementId) {
-  const text = document.getElementById(elementId).value;
+  const text = document.getElementById(elementId).textContent || document.getElementById(elementId).value;
   navigator.clipboard.writeText(text).then(() => {
     console.log("文本已复制到剪贴板");
     // 视觉反馈

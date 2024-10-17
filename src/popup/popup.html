@@ -6,22 +6,22 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="input-group">
-    <h3>选中的文本:</h3>
-    <textarea id="selectedText" readonly></textarea>
-    <button id="copySelected" data-target="selectedText">复制</button>
-  </div>
-  
-  <div class="input-group">
-    <h3>Base64 编码:</h3>
-    <textarea id="encodedText" readonly></textarea>
-    <button id="copyEncoded" data-target="encodedText">复制</button>
-  </div>
-  
-  <div class="input-group">
-    <h3>Base64 解码:</h3>
-    <textarea id="decodedText" readonly></textarea>
-    <button id="copyDecoded" data-target="decodedText">复制</button>
+  <div class="result-group">
+    <div class="result-item">
+      <span class="label">选中的文本:</span>
+      <span id="selectedText" class="result-text"></span>
+      <button id="copySelected" data-target="selectedText">复制</button>
+    </div>
+    <div class="result-item">
+      <span class="label">Base64 编码:</span>
+      <span id="encodedText" class="result-text"></span>
+      <button id="copyEncoded" data-target="encodedText">复制</button>
+    </div>
+    <div class="result-item">
+      <span class="label">Base64 解码:</span>
+      <span id="decodedText" class="result-text"></span>
+      <button id="copyDecoded" data-target="decodedText">复制</button>
+    </div>
   </div>
 
   <hr>
