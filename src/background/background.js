@@ -3,24 +3,39 @@ console.log("背景脚本已加载");
 // 创建右键菜单
 chrome.runtime.onInstalled.addListener(() => {
   console.log("扩展已安装/更新");
-  chrome.contextMenus.create({
+  
+  function createMenuItem(createProperties) {
+    chrome.contextMenus.create(createProperties, () => {
+      if (chrome.runtime.lastError) {
+        console.error(`Error creating menu item: ${chrome.runtime.lastError.message}`);
+      }
+    });
+  }
+
+  createMenuItem({
     id: "base64Menu",
     title: "Base64 编码解码",
     contexts: ["selection"]
   });
-  chrome.contextMenus.create({
+  createMenuItem({
     id: "originalText",
     title: "原文",
     parentId: "base64Menu",
     contexts: ["selection"]
   });
-  chrome.contextMenus.create({
+  createMenuItem({
+    id: "separator1",
+    type: "separator",
+    parentId: "base64Menu",
+    contexts: ["selection"]
+  });
+  createMenuItem({
     id: "base64Encode",
     title: "编码",
     parentId: "base64Menu",
     contexts: ["selection"]
   });
-  chrome.contextMenus.create({
+  createMenuItem({
     id: "base64Decode",
     title: "解码",
     parentId: "base64Menu",
