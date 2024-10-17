@@ -52,21 +52,26 @@ popup 弹窗：
 ## 文件结构
 
 ```
+codecode-base64/
 │
 ├── src/
-│ ├── background/
-│ │ └── background.js # 后台脚本，处理右键菜单和消息传递
-│ ├── content/
-│ │ └── content.js # 内容脚本，处理页面上的文本选择
-│ ├── popup/
-│ │ ├── popup.html # 弹出窗口的 HTML 结构
-│ │ ├── popup.js # 弹出窗口的 JavaScript 逻辑
-│ │ └── popup.css # 弹出窗口的样式
-│ └── icons/
-│ └── ... # 各种尺寸的扩展图标
+│   ├── background/
+│   │   └── background.js  # 后台脚本，处理右键菜单和消息传递
+│   ├── content/
+│   │   └── content.js     # 内容脚本，处理页面上的文本选择
+│   ├── popup/
+│   │   ├── popup.html     # 弹出窗口的 HTML 结构
+│   │   ├── popup.js       # 弹出窗口的 JavaScript 逻辑
+│   │   └── popup.css      # 弹出窗口的样式
+│   └── icons/
+│       └── ...            # 各种尺寸的扩展图标
 │
-├── manifest.json # 扩展的配置文件
-└── README.md # 本文档
+├── screenshots/
+│   ├── 1.png              # popup 弹窗截图
+│   └── 2.png              # 右键菜单截图
+│
+├── manifest.json          # 扩展的配置文件
+└── README.md              # 本文档
 ```
 
 ## 开发说明
