@@ -1,5 +1,35 @@
 console.log("内容脚本已加载");
 
+// 防抖函数
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// 发送选中文本到背景脚本
+function sendSelectedText() {
+  const selectedText = window.getSelection().toString().trim();
+  if (selectedText) {
+    chrome.runtime.sendMessage({
+      action: "textSelected",
+      text: selectedText
+    });
+  }
+}
+
+// 使用防抖包装 sendSelectedText 函数
+const debouncedSendSelectedText = debounce(sendSelectedText, 300);
+
+// 监听文本选择事件
+document.addEventListener('selectionchange', debouncedSendSelectedText);
+
 // 监听来自popup或background的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("内容脚本收到消息:", request);
@@ -19,17 +49,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     
     document.body.removeChild(textArea);
+  } else if (request.action === "getSelectedText") {
+    // 新增：响应获取选中文本的请求
+    sendResponse({text: window.getSelection().toString().trim()});
   }
   return true; // 保持消息通道开放
-});
-
-// 监听文本选择事件
-document.addEventListener('selectionchange', () => {
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText) {
-    chrome.runtime.sendMessage({
-      action: "textSelected",
-      text: selectedText
-    });
-  }
 });

@@ -10,50 +10,101 @@ chrome.runtime.onInstalled.addListener(() => {
   });
   chrome.contextMenus.create({
     id: "base64Encode",
-    title: "编码: %s",
+    title: "编码",
     parentId: "base64Menu",
     contexts: ["selection"]
   });
   chrome.contextMenus.create({
     id: "base64Decode",
-    title: "解码: %s",
+    title: "解码",
     parentId: "base64Menu",
     contexts: ["selection"]
   });
 });
 
+// 动态注入内容脚本
+async function injectContentScript(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['src/content/content.js']
+    });
+    console.log("内容脚本已注入到标签页", tabId);
+  } catch (err) {
+    console.error("注入内容脚本时出错:", err);
+  }
+}
+
+// 监听标签页更新事件
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith('http')) {
+    injectContentScript(tabId);
+  }
+});
+
+// 获取最新选中文本
+async function getLatestSelectedText(tabId) {
+  try {
+    return new Promise((resolve) => {
+      chrome.tabs.sendMessage(tabId, { action: "getSelectedText" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("获取最新选中文本时出错:", chrome.runtime.lastError);
+          resolve(null);
+        } else {
+          resolve(response && response.text);
+        }
+      });
+    });
+  } catch (err) {
+    console.error("获取最新选中文本时出错:", err);
+    return null;
+  }
+}
+
+// 安全的 Base64 解码函数
+function safeAtob(str) {
+  try {
+    return decodeURIComponent(escape(atob(str)));
+  } catch (e) {
+    console.error("Base64 解码错误:", e);
+    return "无法解码: 不是有效的 Base64 字符串或包含非 Latin1 字符";
+  }
+}
+
+// 安全的 Base64 编码函数
+function safeBtoa(str) {
+  try {
+    return btoa(unescape(encodeURIComponent(str)));
+  } catch (e) {
+    console.error("Base64 编码错误:", e);
+    return "无法编码";
+  }
+}
+
 // 更新右键菜单
-function updateContextMenu(info) {
+async function updateContextMenu(info, tab) {
   console.log("更新右键菜单", info);
-  const selectedText = info.selectionText;
-  let encodedText, decodedText;
+  let selectedText = info.selectionText;
 
-  // 编码
-  try {
-    encodedText = btoa(unescape(encodeURIComponent(selectedText)));
-  } catch (e) {
-    encodedText = "无法编码";
-    console.error("编码错误:", e);
+  // 获取最新选中文本
+  const latestText = await getLatestSelectedText(tab.id);
+  if (latestText) {
+    selectedText = latestText;
   }
 
-  // 解码
-  try {
-    decodedText = decodeURIComponent(escape(atob(selectedText)));
-  } catch (e) {
-    decodedText = "无法解码: 不是有效的 Base64 字符串";
-    console.error("解码错误:", e);
-  }
+  let encodedText = safeBtoa(selectedText);
+  let decodedText = safeAtob(selectedText);
 
   // 更新菜单项
   chrome.contextMenus.update("base64Encode", {
-    title: `编码: ${encodedText}`
+    title: `编码: ${encodedText.substr(0, 20)}${encodedText.length > 20 ? '...' : ''}`
   }, () => {
     if (chrome.runtime.lastError) {
       console.error("更新编码菜单项错误:", chrome.runtime.lastError);
     }
   });
   chrome.contextMenus.update("base64Decode", {
-    title: `解码: ${decodedText}`
+    title: `解码: ${decodedText.substr(0, 20)}${decodedText.length > 20 ? '...' : ''}`
   }, () => {
     if (chrome.runtime.lastError) {
       console.error("更新解码菜单项错误:", chrome.runtime.lastError);
@@ -80,35 +131,31 @@ function updateContextMenu(info) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("收到消息:", request);
   if (request.action === "textSelected") {
-    updateContextMenu({ selectionText: request.text });
+    updateContextMenu({ selectionText: request.text }, sender.tab);
   }
   // 确保返回 true 以保持消息通道开放
   return true;
 });
 
 // 处理右键菜单点击事件
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log("菜单项被点击", info);
-  if (!info.selectionText) {
+
+  // 不再需要在这里注入内容脚本，因为我们在标签页更新时已经注入了
+
+  // 获取最新选中文本
+  const selectedText = await getLatestSelectedText(tab.id) || info.selectionText;
+
+  if (!selectedText) {
     console.log("没有选中文本");
     return;
   }
 
   let textToCopy = "";
   if (info.menuItemId === "base64Encode") {
-    try {
-      textToCopy = btoa(unescape(encodeURIComponent(info.selectionText)));
-    } catch (e) {
-      console.error("编码错误:", e);
-      textToCopy = "无法编码";
-    }
+    textToCopy = safeBtoa(selectedText);
   } else if (info.menuItemId === "base64Decode") {
-    try {
-      textToCopy = decodeURIComponent(escape(atob(info.selectionText)));
-    } catch (e) {
-      console.error("解码错误:", e);
-      textToCopy = "无法解码: 不是有效的 Base64 字符串";
-    }
+    textToCopy = safeAtob(selectedText);
   }
 
   console.log("准备复制的文本:", textToCopy);
