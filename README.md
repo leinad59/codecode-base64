@@ -29,10 +29,12 @@
 ## 文件说明
 
 - `manifest.json`: 扩展的配置文件
-- `background.js`: 后台脚本，处理右键菜单创建、更新和点击事件
-- `content.js`: 内容脚本，监听文本选择事件和处理复制操作
-- `popup.html`: 弹出窗口的 HTML 结构
-- `popup.js`: 弹出窗口的 JavaScript 逻辑
+- `src/background/background.js`: 后台脚本，处理右键菜单创建、更新和点击事件
+- `src/content/content.js`: 内容脚本，监听文本选择事件和处理复制操作
+- `src/popup/popup.html`: 弹出窗口的 HTML 结构
+- `src/popup/popup.js`: 弹出窗口的 JavaScript 逻辑
+- `src/popup/popup.css`: 弹出窗口的样式
+- `src/icons/`: 包含扩展图标的目录
 
 ## 注意事项
 

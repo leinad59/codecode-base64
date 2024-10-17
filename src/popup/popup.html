@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Base64 编码解码</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="input-group">
+    <h3>选中的文本:</h3>
+    <textarea id="selectedText" readonly></textarea>
+    <button id="copySelected" data-target="selectedText">复制</button>
+  </div>
+  
+  <div class="input-group">
+    <h3>Base64 编码:</h3>
+    <textarea id="encodedText" readonly></textarea>
+    <button id="copyEncoded" data-target="encodedText">复制</button>
+  </div>
+  
+  <div class="input-group">
+    <h3>Base64 解码:</h3>
+    <textarea id="decodedText" readonly></textarea>
+    <button id="copyDecoded" data-target="decodedText">复制</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
