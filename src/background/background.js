@@ -9,6 +9,12 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ["selection"]
   });
   chrome.contextMenus.create({
+    id: "originalText",
+    title: "原文",
+    parentId: "base64Menu",
+    contexts: ["selection"]
+  });
+  chrome.contextMenus.create({
     id: "base64Encode",
     title: "编码",
     parentId: "base64Menu",
@@ -96,6 +102,13 @@ async function updateContextMenu(info, tab) {
   let decodedText = safeAtob(selectedText);
 
   // 更新菜单项
+  chrome.contextMenus.update("originalText", {
+    title: `原文: ${selectedText.substr(0, 20)}${selectedText.length > 20 ? '...' : ''}`
+  }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("更新原文菜单项错误:", chrome.runtime.lastError);
+    }
+  });
   chrome.contextMenus.update("base64Encode", {
     title: `编码: ${encodedText.substr(0, 20)}${encodedText.length > 20 ? '...' : ''}`
   }, () => {
@@ -141,8 +154,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log("菜单项被点击", info);
 
-  // 不再需要在这里注入内容脚本，因为我们在标签页更新时已经注入了
-
   // 获取最新选中文本
   const selectedText = await getLatestSelectedText(tab.id) || info.selectionText;
 
@@ -152,7 +163,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   let textToCopy = "";
-  if (info.menuItemId === "base64Encode") {
+  if (info.menuItemId === "originalText") {
+    textToCopy = selectedText;
+  } else if (info.menuItemId === "base64Encode") {
     textToCopy = safeBtoa(selectedText);
   } else if (info.menuItemId === "base64Decode") {
     textToCopy = safeAtob(selectedText);
