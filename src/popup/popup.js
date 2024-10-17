@@ -1,5 +1,29 @@
 console.log("弹出脚本已加载");
 
+function updateLiveResults() {
+  const originalText = document.getElementById("originalText").value;
+  let encodedText, decodedText;
+
+  // 编码
+  try {
+    encodedText = btoa(unescape(encodeURIComponent(originalText)));
+  } catch (e) {
+    encodedText = "无法编码";
+    console.error("编码错误:", e);
+  }
+
+  // 解码
+  try {
+    decodedText = decodeURIComponent(escape(atob(originalText)));
+  } catch (e) {
+    decodedText = "无法解码: 不是有效的 Base64 字符串";
+    console.error("解码错误:", e);
+  }
+
+  document.getElementById("liveEncodedText").value = encodedText;
+  document.getElementById("liveDecodedText").value = decodedText;
+}
+
 // 初始化时获取最新结果
 function loadLatestResult() {
   chrome.storage.local.get(["lastResult"], (result) => {
@@ -11,58 +35,6 @@ function loadLatestResult() {
     }
   });
 }
-
-// 在 DOMContentLoaded 事件中调用 loadLatestResult
-document.addEventListener('DOMContentLoaded', loadLatestResult);
-
-// 获取当前活动标签页
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  // 向content script发送消息,请求获取选中的文本
-  chrome.tabs.sendMessage(tabs[0].id, { action: "getSelection" }, (response) => {
-    if (response && response.selectedText) {
-      const selectedText = response.selectedText;
-      
-      // 显示选中的文本
-      document.getElementById("selectedText").value = selectedText;
-      
-      // Base64 编码
-      const encodedText = btoa(selectedText);
-      document.getElementById("encodedText").value = encodedText;
-      
-      // Base64 解码
-      try {
-        const decodedText = atob(selectedText);
-        document.getElementById("decodedText").value = decodedText;
-      } catch (e) {
-        // 如果解码失败,显示错误信息
-        document.getElementById("decodedText").value = "无法解码: 不是有效的 Base64 字符串";
-      }
-    }
-  });
-});
-
-// 监听来自 background 的消息
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("弹出窗口收到消息:", request);
-  if (request.action === "updatePopup") {
-    document.getElementById("selectedText").value = request.selectedText;
-    document.getElementById("encodedText").value = request.encodedText;
-    document.getElementById("decodedText").value = request.decodedText;
-    
-    // 保存最新结果到本地存储
-    chrome.storage.local.set({lastResult: request}, () => {
-      if (chrome.runtime.lastError) {
-        console.error("保存到本地存储错误:", chrome.runtime.lastError);
-      } else {
-        console.log("结果已保存到本地存储");
-      }
-    });
-  }
-  // 发送响应
-  sendResponse({received: true});
-  // 返回 true 以保持消息通道开放
-  return true;
-});
 
 // 复制功能
 function copyText(elementId) {
@@ -81,10 +53,19 @@ function copyText(elementId) {
   });
 }
 
-// 添加复制按钮事件监听器
+// 在 DOMContentLoaded 事件中设置事件监听器和加载最新结果
 document.addEventListener('DOMContentLoaded', () => {
   console.log("DOM 已加载，添加事件监听器");
-  document.getElementById("copySelected").addEventListener("click", () => copyText("selectedText"));
-  document.getElementById("copyEncoded").addEventListener("click", () => copyText("encodedText"));
-  document.getElementById("copyDecoded").addEventListener("click", () => copyText("decodedText"));
+  
+  // 加载最新结果
+  loadLatestResult();
+  
+  // 为原文文本框添加输入事件监听器
+  document.getElementById("originalText").addEventListener("input", updateLiveResults);
+  
+  // 添加复制按钮事件监听器
+  const copyButtons = document.querySelectorAll('button[id^="copy"]');
+  copyButtons.forEach(button => {
+    button.addEventListener("click", () => copyText(button.dataset.target));
+  });
 });

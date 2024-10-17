@@ -23,6 +23,25 @@
     <textarea id="decodedText" readonly></textarea>
     <button id="copyDecoded" data-target="decodedText">复制</button>
   </div>
+
+  <hr>
+
+  <div class="input-group">
+    <h3>原文:</h3>
+    <textarea id="originalText"></textarea>
+  </div>
+  
+  <div class="input-group">
+    <h3>实时 Base64 编码:</h3>
+    <textarea id="liveEncodedText" readonly></textarea>
+    <button id="copyLiveEncoded" data-target="liveEncodedText">复制</button>
+  </div>
+  
+  <div class="input-group">
+    <h3>实时 Base64 解码:</h3>
+    <textarea id="liveDecodedText" readonly></textarea>
+    <button id="copyLiveDecoded" data-target="liveDecodedText">复制</button>
+  </div>
   
   <script src="popup.js"></script>
 </body>
