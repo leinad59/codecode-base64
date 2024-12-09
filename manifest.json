@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Base64 编码解码",
-  "version": "1.0",
+  "version": "1.0.1",
   "description": "选择文本并按 Base64 编解码",
   "icons": {
     "16": "src/icons/icon16.png",
