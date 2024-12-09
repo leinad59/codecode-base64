@@ -1,34 +1,37 @@
 console.log("内容脚本已加载");
 
-// 防抖函数
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
+// Only initialize if not already defined
+if (typeof window.debouncedSendSelectedText === 'undefined') {
+  // 防抖函数
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
       clearTimeout(timeout);
-      func(...args);
+      timeout = setTimeout(later, wait);
     };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-// 发送选中文本到背景脚本
-function sendSelectedText() {
-  const selectedText = window.getSelection().toString().trim();
-  if (selectedText) {
-    chrome.runtime.sendMessage({
-      action: "textSelected",
-      text: selectedText
-    });
   }
+
+  // 发送选中文本到背景脚本
+  function sendSelectedText() {
+    const selectedText = window.getSelection().toString().trim();
+    if (selectedText) {
+      chrome.runtime.sendMessage({
+        action: "textSelected",
+        text: selectedText
+      });
+    }
+  }
+
+  // 使用防抖包装 sendSelectedText 函数，并将其附加到 window 对象
+  window.debouncedSendSelectedText = debounce(sendSelectedText, 300);
+
+  // 监听文本选择事件
+  document.addEventListener('selectionchange', window.debouncedSendSelectedText);
 }
-
-// 使用防抖包装 sendSelectedText 函数
-const debouncedSendSelectedText = debounce(sendSelectedText, 300);
-
-// 监听文本选择事件
-document.addEventListener('selectionchange', debouncedSendSelectedText);
 
 // 监听来自popup或background的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
